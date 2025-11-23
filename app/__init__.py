@@ -5,7 +5,7 @@ from flask import Flask
 from flask_login import LoginManager
 from dotenv import load_dotenv
 
-
+from .models import db, User, create_tables
 load_dotenv()
 login_manager = LoginManager()
 
@@ -14,7 +14,7 @@ def create_app():
     app = Flask(__name__)
 
     # In production, load this from env variable
-    app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
+    app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "fallback-secret")
     app.config["REMEMBER_COOKIE_DURATION"] = os.getenv("COOKIE_DURATION")
 
     # --- Flask-Login setup ---
@@ -39,6 +39,12 @@ def create_app():
         if not db.is_closed():
             db.close()
 
+    # --- Register blueprints ---
+    from .auth import auth_bp
+    from .routes import api_bp
+
+    app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(api_bp)
 
     # --- Create tables if not exist ---
     with app.app_context():
