@@ -250,3 +250,274 @@ def delete_item(item_id):
 
     it.delete_instance(recursive=True)
     return jsonify({"message": "deleted"}), 200
+
+
+# ------------- INVOICES -------------
+
+@api_bp.route("/invoices", methods=["GET"])
+@login_required
+def list_invoices():
+    invoices = [
+        invoice_to_dict(inv)
+        for inv in Invoice.select().where(Invoice.user == current_user)
+    ]
+    return jsonify(invoices)
+
+
+@api_bp.route("/invoices", methods=["POST"])
+@login_required
+def create_invoice():
+    """
+    JSON example:
+    {
+      "customer_id": 1,
+      "issue_date": "2025-11-23",
+      "due_date": "2025-12-01",
+      "status": "draft",
+      "items": [
+        { "item_id": 1, "quantity": 2 },
+        { "item_id": 2, "quantity": 1, "unit_price": 150.0 }
+      ]
+    }
+    """
+    data = request.get_json() or {}
+    customer_id = data.get("customer_id")
+
+    if not customer_id:
+        return jsonify({"error": "customer_id is required"}), 400
+
+    customer = get_customer_for_user(customer_id)
+    if not customer:
+        return jsonify({"error": "customer not found"}), 400
+
+    inv = Invoice.create(
+        user=current_user,
+        customer=customer,
+        issue_date=parse_date(data.get("issue_date")) or date.today(),
+        due_date=parse_date(data.get("due_date")),
+        status=data.get("status") or "draft",
+    )
+
+    items_data = data.get("items") or []
+    for row in items_data:
+        item_id = row.get("item_id")
+        quantity = row.get("quantity", 1)
+
+        if not item_id:
+            continue
+
+        catalog_item = get_item_for_user(item_id)
+        if not catalog_item:
+            return jsonify({"error": f"item {item_id} not found"}), 400
+
+        unit_price = row.get("unit_price", catalog_item.unit_price)
+
+        InvoiceItem.create(
+            invoice=inv,
+            item=catalog_item,
+            quantity=quantity,
+            unit_price=unit_price,
+        )
+
+    # 👇 recalc stored total after creating all items
+    recalc_invoice_total(inv)
+
+    inv = get_invoice_for_user(inv.id)
+    return jsonify(invoice_to_dict(inv, include_items=True)), 201
+
+
+@api_bp.route("/invoices/<int:invoice_id>", methods=["GET"])
+@login_required
+def get_invoice(invoice_id):
+    inv = get_invoice_for_user(invoice_id)
+    if not inv:
+        return jsonify({"error": "not found"}), 404
+    return jsonify(invoice_to_dict(inv, include_items=True))
+
+
+@api_bp.route("/invoices/<int:invoice_id>", methods=["PUT", "PATCH"])
+@login_required
+def update_invoice(invoice_id):
+    """
+    Update invoice fields, and optionally replace its items:
+
+    {
+      "status": "paid",
+      "items": [
+        { "item_id": 1, "quantity": 3 },
+        { "item_id": 2, "quantity": 1, "unit_price": 200.0 }
+      ]
+    }
+    """
+    inv = get_invoice_for_user(invoice_id)
+    if not inv:
+        return jsonify({"error": "not found"}), 404
+
+    data = request.get_json() or {}
+
+    if "customer_id" in data:
+        customer = get_customer_for_user(data["customer_id"])
+        if not customer:
+            return jsonify({"error": "customer not found"}), 400
+        inv.customer = customer
+
+    if "issue_date" in data:
+        inv.issue_date = parse_date(data["issue_date"])
+    if "due_date" in data:
+        inv.due_date = parse_date(data["due_date"])
+    if "status" in data:
+        inv.status = data["status"]
+
+    inv.save()
+
+    # If items provided, replace all invoice line items
+    if "items" in data:
+        InvoiceItem.delete().where(InvoiceItem.invoice == inv).execute()
+        for row in data["items"] or []:
+            item_id = row.get("item_id")
+            quantity = row.get("quantity", 1)
+
+            if not item_id:
+                continue
+
+            catalog_item = get_item_for_user(item_id)
+            if not catalog_item:
+                return jsonify({"error": f"item {item_id} not found"}), 400
+
+            unit_price = row.get("unit_price", catalog_item.unit_price)
+
+            InvoiceItem.create(
+                invoice=inv,
+                item=catalog_item,
+                quantity=quantity,
+                unit_price=unit_price,
+            )
+
+        # recalc total after changing items
+        recalc_invoice_total(inv)
+
+    inv = get_invoice_for_user(invoice_id)
+    return jsonify(invoice_to_dict(inv, include_items=True))
+
+
+@api_bp.route("/invoices/<int:invoice_id>", methods=["DELETE"])
+@login_required
+def delete_invoice(invoice_id):
+    inv = get_invoice_for_user(invoice_id)
+    if not inv:
+        return jsonify({"error": "not found"}), 404
+
+    inv.delete_instance(recursive=True)
+    return jsonify({"message": "deleted"}), 200
+
+
+# ---------- INVOICE LINE ITEMS -------------
+
+@api_bp.route("/invoices/<int:invoice_id>/items", methods=["GET"])
+@login_required
+def list_invoice_items(invoice_id):
+    inv = get_invoice_for_user(invoice_id)
+    if not inv:
+        return jsonify({"error": "invoice not found"}), 404
+
+    items = [invoice_item_to_dict(li) for li in inv.invoice_items]
+    return jsonify(items)
+
+
+@api_bp.route("/invoices/<int:invoice_id>/items", methods=["POST"])
+@login_required
+def add_invoice_item(invoice_id):
+    """
+    JSON:
+    {
+      "item_id": 1,
+      "quantity": 2,
+      "unit_price": 120.0   # optional, default = catalog price
+    }
+    """
+    inv = get_invoice_for_user(invoice_id)
+    if not inv:
+        return jsonify({"error": "invoice not found"}), 404
+
+    data = request.get_json() or {}
+    item_id = data.get("item_id")
+    if not item_id:
+        return jsonify({"error": "item_id is required"}), 400
+
+    catalog_item = get_item_for_user(item_id)
+    if not catalog_item:
+        return jsonify({"error": "item not found"}), 400
+
+    quantity = data.get("quantity", 1)
+    unit_price = data.get("unit_price", catalog_item.unit_price)
+
+    li = InvoiceItem.create(
+        invoice=inv,
+        item=catalog_item,
+        quantity=quantity,
+        unit_price=unit_price,
+    )
+
+    # 👇 recalc total after adding a line
+    recalc_invoice_total(inv)
+
+    return jsonify(invoice_item_to_dict(li)), 201
+
+
+@api_bp.route("/invoice-items/<int:line_id>", methods=["GET"])
+@login_required
+def get_invoice_item(line_id):
+    try:
+        li = InvoiceItem.get_by_id(line_id)
+    except InvoiceItem.DoesNotExist:
+        return jsonify({"error": "not found"}), 404
+
+    # enforce ownership via invoice -> user
+    if li.invoice.user != current_user:
+        return jsonify({"error": "not found"}), 404
+
+    return jsonify(invoice_item_to_dict(li))
+
+
+@api_bp.route("/invoice-items/<int:line_id>", methods=["PUT", "PATCH"])
+@login_required
+def update_invoice_item(line_id):
+    try:
+        li = InvoiceItem.get_by_id(line_id)
+    except InvoiceItem.DoesNotExist:
+        return jsonify({"error": "not found"}), 404
+
+    if li.invoice.user != current_user:
+        return jsonify({"error": "not found"}), 404
+
+    data = request.get_json() or {}
+    if "quantity" in data:
+        li.quantity = data["quantity"]
+    if "unit_price" in data:
+        li.unit_price = data["unit_price"]
+    li.save()
+
+    # 👇 recalc total after updating a line
+    recalc_invoice_total(li.invoice)
+
+    return jsonify(invoice_item_to_dict(li))
+
+
+@api_bp.route("/invoice-items/<int:line_id>", methods=["DELETE"])
+@login_required
+def delete_invoice_item(line_id):
+    try:
+        li = InvoiceItem.get_by_id(line_id)
+    except InvoiceItem.DoesNotExist:
+        return jsonify({"error": "not found"}), 404
+
+    if li.invoice.user != current_user:
+        return jsonify({"error": "not found"}), 404
+
+    inv = li.invoice
+    li.delete_instance()
+
+    # 👇 recalc total after deleting a line
+    recalc_invoice_total(inv)
+
+    return "", 204
