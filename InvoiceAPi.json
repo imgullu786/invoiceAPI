@@ -1,0 +1,696 @@
+{
+  "name": "InvoiceAPi",
+  "version": "1",
+  "items": [
+    {
+      "type": "folder",
+      "name": "Auth",
+      "filename": "Auth",
+      "seq": 5,
+      "examples": [],
+      "root": {
+        "request": {
+          "auth": {
+            "mode": "inherit"
+          }
+        },
+        "meta": {
+          "name": "Auth",
+          "seq": 5
+        }
+      },
+      "items": [
+        {
+          "type": "http",
+          "name": "Register User",
+          "filename": "Register User.bru",
+          "seq": 2,
+          "settings": {
+            "encodeUrl": true,
+            "timeout": 0
+          },
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/auth/register",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"username\": \"anshul\",\n  \"password\": \"anshul123\"\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Login User",
+          "filename": "Login User.bru",
+          "seq": 4,
+          "settings": {
+            "encodeUrl": true,
+            "timeout": 0
+          },
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/auth/login",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"username\": \"gulamgaush\",\n  \"password\": \"gulam123\"\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Logout User",
+          "filename": "Logout User.bru",
+          "seq": 8,
+          "settings": {
+            "encodeUrl": true,
+            "timeout": 0
+          },
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/auth/logout",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Customer",
+      "filename": "Customer",
+      "seq": 6,
+      "examples": [],
+      "root": {
+        "request": {
+          "auth": {
+            "mode": "inherit"
+          }
+        },
+        "meta": {
+          "name": "Customer",
+          "seq": 6
+        }
+      },
+      "items": [
+        {
+          "type": "http",
+          "name": "Create Customer",
+          "filename": "Create Customer.bru",
+          "seq": 2,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/customers",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"name\": \"Gulam Gaush\",\n  \"email\": \"gulamgaush@gmail.com\",\n  \"address\": \"Raipur\",\n  \"phone\": \"9999999999\"\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get All Customers",
+          "filename": "Get All Customers.bru",
+          "seq": 2,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/customers",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get Customer",
+          "filename": "Get Customer.bru",
+          "seq": 3,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/customers/1",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Customer",
+          "filename": "Delete Customer.bru",
+          "seq": 4,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/customers/2",
+            "method": "DELETE",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Update Customer",
+          "filename": "Update Customer.bru",
+          "seq": 5,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/customers/2",
+            "method": "PATCH",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"name\": \"Gulam Gaush\",\n  \"email\": \"gulamgaush@gmail.com\",\n  \"address\": \"Raipur\",\n  \"phone\": \"9999999999\"\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Item",
+      "filename": "Item",
+      "seq": 9,
+      "examples": [],
+      "root": {
+        "request": {
+          "auth": {
+            "mode": "inherit"
+          }
+        },
+        "meta": {
+          "name": "Item",
+          "seq": 9
+        }
+      },
+      "items": [
+        {
+          "type": "http",
+          "name": "Get All Items",
+          "filename": "Get All Items.bru",
+          "seq": 2,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/items",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get Item",
+          "filename": "Get Item.bru",
+          "seq": 3,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/items/3",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Item",
+          "filename": "Delete Item.bru",
+          "seq": 4,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/items/5",
+            "method": "DELETE",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Item",
+          "filename": "Create Item.bru",
+          "seq": 2,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/items",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n    \"name\": \"Deployment Service\",\n    \"description\": \"Per hour deployment service rate\",\n    \"unit_price\": 200.0\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Update Item",
+          "filename": "Update Item.bru",
+          "seq": 5,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/items/4",
+            "method": "PATCH",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "  {\n    \"name\": \"Consulting\",\n    \"description\": \"Per hour consulting rate\",\n    \"unit_price\": 100.0\n  }",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Invoices",
+      "filename": "Invoices",
+      "seq": 8,
+      "examples": [],
+      "root": {
+        "request": {
+          "auth": {
+            "mode": "inherit"
+          }
+        },
+        "meta": {
+          "name": "Invoices",
+          "seq": 8
+        }
+      },
+      "items": [
+        {
+          "type": "http",
+          "name": "Get Invoice",
+          "filename": "Get Invoice.bru",
+          "seq": 3,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/invoices",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get All Invoices",
+          "filename": "Get All Invoices.bru",
+          "seq": 2,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/invoices",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Invoice",
+          "filename": "Delete Invoice.bru",
+          "seq": 4,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/invoices/3",
+            "method": "DELETE",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Create Invoice",
+          "filename": "Create Invoice.bru",
+          "seq": 2,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/invoices",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"customer_id\": 1,\n  \"issue_date\": \"2025-11-23\",\n  \"due_date\": \"2025-12-01\",\n  \"status\": \"sent\",\n  \"items\": [\n    { \"item_id\": 1, \"quantity\": 2 },\n    { \"item_id\": 2, \"quantity\": 1 }\n  ]\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Generate invoice Pdf",
+          "filename": "Generate invoice Pdf.bru",
+          "seq": 3,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/invoices/1/pdf",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Update Invoice",
+          "filename": "Update Invoice.bru",
+          "seq": 6,
+          "settings": {},
+          "tags": [],
+          "examples": [],
+          "request": {
+            "url": "{{url}}/invoices/1",
+            "method": "PATCH",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"customer_id\": 1,\n  \"status\": \"paid\",\n  \"items\": [\n    { \"item_id\": 1, \"quantity\": 1 },\n    { \"item_id\": 2, \"quantity\": 1 }\n  ]\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "This request retrieves a list of users from the JSONPlaceholder API.",
+            "auth": {
+              "mode": "none"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "activeEnvironmentUid": "fL3PqX1X7L5R9BYNS4QQI",
+  "environments": [
+    {
+      "variables": [
+        {
+          "name": "url",
+          "value": "http://127.0.0.1:5000",
+          "enabled": true,
+          "secret": false,
+          "type": "text"
+        }
+      ],
+      "name": "Invoice"
+    }
+  ],
+  "root": {
+    "request": {
+      "auth": {
+        "mode": "none"
+      }
+    }
+  },
+  "brunoConfig": {
+    "version": "1",
+    "name": "InvoiceAPi",
+    "type": "collection",
+    "ignore": [
+      "node_modules",
+      ".git"
+    ]
+  }
+}
