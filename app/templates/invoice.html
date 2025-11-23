@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice #{{ invoice.id }}</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      font-size: 12px;
+      margin: 40px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 6px;
+      vertical-align: top;
+    }
+    th {
+      background: #eee;
+      text-align: left;
+    }
+    .right {
+      text-align: right;
+    }
+    .center {
+      text-align: center;
+    }
+    .bold {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Invoice #{{ invoice.id }}</h1>
+
+<!-- CUSTOMER & INVOICE INFO TABLE -->
+<table>
+  <tr>
+    <th colspan="2">Customer Details</th>
+    <th colspan="2">Invoice Details</th>
+  </tr>
+
+  <tr>
+    <td class="bold">Name</td>
+    <td>{{ customer.name }}</td>
+
+    <td class="bold">Issue Date</td>
+    <td>{{ invoice.issue_date }}</td>
+  </tr>
+
+  <tr>
+    <td class="bold">Address</td>
+    <td>
+      {% if customer.address %}
+        {{ customer.address | replace('\n','<br>') | safe }}
+      {% else %}
+        -
+      {% endif %}
+    </td>
+
+    <td class="bold">Due Date</td>
+    <td>{{ invoice.due_date or '-' }}</td>
+  </tr>
+
+  <tr>
+    <td class="bold">Email</td>
+    <td>{{ customer.email or '-' }}</td>
+
+    <td class="bold">Status</td>
+    <td>{{ invoice.status }}</td>
+  </tr>
+
+  <tr>
+    <td class="bold">Phone</td>
+    <td>{{ customer.phone or '-' }}</td>
+
+    <td class="bold">Invoice ID</td>
+    <td>{{ invoice.id }}</td>
+  </tr>
+</table>
+
+<!-- ITEMS TABLE -->
+<table>
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th class="center" style="width: 60px;">Qty</th>
+      <th class="right" style="width: 100px;">Unit Price</th>
+      <th class="right" style="width: 100px;">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% set grand_total = 0 %}
+    {% for line in items %}
+      {% set line_total = line.quantity * line.unit_price %}
+      {% set grand_total = grand_total + line_total %}
+      <tr>
+        <td>{{ line.item.name }}</td>
+        <td class="center">{{ line.quantity }}</td>
+        <td class="right">{{ '%.2f'|format(line.unit_price) }}</td>
+        <td class="right">{{ '%.2f'|format(line_total) }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- GRAND TOTAL TABLE -->
+<table>
+  <tr>
+    <th class="right">Grand Total</th>
+    <td class="right bold">{{ '%.2f'|format(invoice.total or grand_total) }}</td>
+  </tr>
+</table>
+
+</body>
+</html>

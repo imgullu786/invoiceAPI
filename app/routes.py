@@ -521,3 +521,33 @@ def delete_invoice_item(line_id):
     recalc_invoice_total(inv)
 
     return "", 204
+
+
+
+# ---------  INVOICE PDF (WeasyPrint) -----
+
+@api_bp.route("/invoices/<int:invoice_id>/pdf", methods=["GET"])
+@login_required
+def invoice_pdf(invoice_id):
+    inv = get_invoice_for_user(invoice_id)
+    if not inv:
+        return jsonify({"error": "not found"}), 404
+
+    customer = inv.customer
+    items = list(inv.invoice_items)
+
+    html = render_template(
+        "invoice.html",
+        invoice=inv,
+        customer=customer,
+        items=items,
+    )
+
+    pdf_bytes = HTML(string=html).write_pdf()
+
+    response = make_response(pdf_bytes)
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = (
+        f'inline; filename="invoice-{inv.id}.pdf"'
+    )
+    return response
