@@ -1,3 +1,6 @@
 Flask
 peewee
 Flask-Login
+weasyprint
+Werkzeug
+python-dotenv

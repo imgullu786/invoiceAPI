@@ -1,0 +1,7 @@
+FLASK_SECRET_KEY=
+
+#in seconds
+COOKIE_DURATION=
+
+#sqlite
+DATABASE_PATH=
