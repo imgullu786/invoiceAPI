@@ -147,6 +147,17 @@ http://127.0.0.1:5000
 | PATCH | `/customers/<id>` |
 | DELETE | `/customers/<id>` |
 
+**`Example Create Customers`**
+```bash
+{
+  "name": "Sujal",
+  "email": "sujal@gmail.com",
+  "address": "Nagpur",
+  "phone": "9999999999"
+}
+```
+
+
 ### 🛒 Items (Catalog)
 
 | Method | Endpoint |
@@ -156,6 +167,15 @@ http://127.0.0.1:5000
 | GET | `/items/<id>` |
 | PATCH | `/items/<id>` |
 | DELETE | `/items/<id>` |
+
+**`Example Create Items`**
+```bash
+{
+    "name": "Deployment Service",
+    "description": "Per hour deployment service rate",
+    "unit_price": 200.0
+}
+```
 
 ### 🧾 Invoices
 
