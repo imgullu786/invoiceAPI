@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template
-from flask_login import login_required, current_user
 
 views_bp = Blueprint("views", __name__)
 
@@ -32,3 +31,8 @@ def customers_ui():
 @views_bp.route("/items-ui")
 def items_ui():
     return render_template("items.html")
+
+
+@views_bp.route("/invoices-ui")
+def invoices_ui():
+    return render_template("invoices.html")
