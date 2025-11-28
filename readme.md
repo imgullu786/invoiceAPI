@@ -213,6 +213,8 @@ http://127.0.0.1:5000
 
 ### Frontend Routes (Server-Rendered)
 
+| Routes | Description |
+| :--- | :--- |
 | /login | Login form. |
 | /register | User signup page. |
 | /dashboard | Overview of counts: customers, items, invoices. |
