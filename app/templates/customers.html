@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Customers - Invoicing App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+  <h1 class="text-2xl font-semibold">Customers</h1>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <!-- List -->
+  <div class="md:col-span-2 bg-white shadow rounded p-4">
+    <h2 class="text-lg font-semibold mb-2">Customer List</h2>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b">
+          <th class="text-left py-2">Name</th>
+          <th class="text-left py-2">Email</th>
+          <th class="text-left py-2">Phone</th>
+          <th class="text-center py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="customersTableBody">
+        <!-- filled by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Create / Edit form -->
+  <div class="bg-white shadow rounded p-4">
+    <h2 id="customerFormTitle" class="text-lg font-semibold mb-2">Add Customer</h2>
+    <form id="customerForm" class="space-y-3 text-sm">
+      <input type="hidden" id="customerId">
+      <div>
+        <label class="block mb-1">Name</label>
+        <input id="custName" name="name" class="w-full border px-2 py-1 rounded" required>
+      </div>
+      <div>
+        <label class="block mb-1">Email</label>
+        <input id="custEmail" name="email" type="email" class="w-full border px-2 py-1 rounded">
+      </div>
+      <div>
+        <label class="block mb-1">Phone</label>
+        <input id="custPhone" name="phone" class="w-full border px-2 py-1 rounded">
+      </div>
+      <div>
+        <label class="block mb-1">Address</label>
+        <textarea id="custAddress" name="address" rows="3" class="w-full border px-2 py-1 rounded"></textarea>
+      </div>
+      <p id="customerError" class="text-xs text-red-600 hidden"></p>
+      <div class="flex gap-2">
+        <button class="flex-1 bg-blue-600 text-white rounded py-1.5 hover:bg-blue-700">
+          <span id="customerSubmitLabel">Save</span>
+        </button>
+        <button type="button" id="customerCancelEdit"
+                class="hidden flex-1 bg-gray-200 text-gray-800 rounded py-1.5 hover:bg-gray-300">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

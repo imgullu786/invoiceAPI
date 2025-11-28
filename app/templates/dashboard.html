@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Invoicing App{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-semibold mb-4">Dashboard</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white shadow rounded p-4">
+    <p class="text-sm text-gray-500">Customers</p>
+    <p id="customersCount" class="text-2xl font-bold">-</p>
+  </div>
+  <div class="bg-white shadow rounded p-4">
+    <p class="text-sm text-gray-500">Items</p>
+    <p id="itemsCount" class="text-2xl font-bold">-</p>
+  </div>
+  <div class="bg-white shadow rounded p-4">
+    <p class="text-sm text-gray-500">Invoices</p>
+    <p id="invoicesCount" class="text-2xl font-bold">-</p>
+  </div>
+</div>
+
+<p class="text-sm text-gray-600">
+  Use the navigation bar to manage <strong>Customers</strong>, <strong>Items</strong>, and <strong>Invoices</strong>.
+</p>
+{% endblock %}
