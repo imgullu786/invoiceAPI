@@ -42,9 +42,11 @@ def create_app():
     # --- Register blueprints ---
     from .auth import auth_bp
     from .routes import api_bp
+    from .views import views_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(api_bp)
+    app.register_blueprint(views_bp)
 
     # --- Create tables if not exist ---
     with app.app_context():
