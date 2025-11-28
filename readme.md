@@ -209,3 +209,13 @@ http://127.0.0.1:5000
 | GET | `/invoice-items/<line_id>` |
 | PATCH | `/invoice-items/<line_id>` |
 | DELETE | `/invoice-items/<line_id>` |
+
+
+### Frontend Routes (Server-Rendered)
+
+| /login | Login form. |
+| /register | User signup page. |
+| /dashboard | Overview of counts: customers, items, invoices. |
+| /customers-ui | Full customer management (list, create, edit, delete). |
+| /items-ui | Catalog management for items (list, create, edit, delete). |
+| /invoices-ui | Invoice management UI (create, update status, edit items, delete, PDF). |
