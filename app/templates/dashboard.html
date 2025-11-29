@@ -23,3 +23,36 @@
   Use the navigation bar to manage <strong>Customers</strong>, <strong>Items</strong>, and <strong>Invoices</strong>.
 </p>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  async function loadCounts() {
+    try {
+      const [cRes, iRes, invRes] = await Promise.all([
+        fetch('/customers'),
+        fetch('/items'),
+        fetch('/invoices'),
+      ]);
+
+      if (cRes.ok) {
+        const customers = await cRes.json();
+        document.getElementById('customersCount').textContent = customers.length;
+      }
+        
+      if (iRes.ok) {
+        const items = await iRes.json();
+        document.getElementById('itemsCount').textContent = items.length;
+      }
+
+      if (invRes.ok) {
+        const invoices = await invRes.json();
+        document.getElementById('invoicesCount').textContent = invoices.length;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadCounts);
+</script>
+{% endblock %}

@@ -94,3 +94,338 @@
   </form>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  let customersCache = [];
+  let itemsCache = [];
+  let editingInvoiceId = null;
+
+  // ---------- Helpers to build line rows ----------
+
+  function createLineRow(containerId, prefill) {
+    const div = document.createElement('div');
+    div.className = 'flex gap-2 items-center';
+
+    const itemSelect = document.createElement('select');
+    itemSelect.className = 'flex-1 border rounded px-2 py-1';
+    itemSelect.innerHTML = '<option value="">Select item</option>' +
+      itemsCache.map(it => `<option value="${it.id}">${it.name}</option>`).join('');
+
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number';
+    qtyInput.min = '1';
+    qtyInput.value = '1';
+    qtyInput.className = 'w-20 border rounded px-2 py-1';
+
+    // prefill (for edit mode)
+    if (prefill) {
+      if (prefill.item_id) itemSelect.value = prefill.item_id;
+      if (prefill.quantity) qtyInput.value = prefill.quantity;
+    }
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = '×';
+    removeBtn.className = 'px-2 py-1 text-xs text-red-600';
+    removeBtn.addEventListener('click', () => div.remove());
+
+    div.appendChild(itemSelect);
+    div.appendChild(qtyInput);
+    div.appendChild(removeBtn);
+
+    document.getElementById(containerId).appendChild(div);
+  }
+
+  // ---------- Load base data ----------
+
+  async function loadCustomers() {
+    const res = await fetch('/customers');
+    if (!res.ok) return;
+    customersCache = await res.json();
+    const select = document.getElementById('invoiceCustomer');
+    select.innerHTML = '';
+    customersCache.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      select.appendChild(opt);
+    });
+  }
+
+  async function loadItems() {
+    const res = await fetch('/items');
+    if (!res.ok) return;
+    itemsCache = await res.json();
+  }
+
+  async function loadInvoices() {
+    const res = await fetch('/invoices');
+    if (!res.ok) return;
+    const invoices = await res.json();
+    const tbody = document.getElementById('invoicesTableBody');
+    tbody.innerHTML = '';
+
+    invoices.forEach(inv => {
+      const customer = customersCache.find(c => c.id === inv.customer_id);
+      const tr = document.createElement('tr');
+      tr.className = 'border-b';
+
+      const statusSelectId = `inv-status-${inv.id}`;
+
+      tr.innerHTML = `
+        <td class="py-1">${inv.id}</td>
+        <td class="py-1">${customer ? customer.name : '-'}</td>
+        <td class="py-1">
+          <select id="${statusSelectId}" class="border rounded px-1 py-0.5 text-xs">
+            <option value="draft" ${inv.status === 'draft' ? 'selected' : ''}>draft</option>
+            <option value="sent" ${inv.status === 'sent' ? 'selected' : ''}>sent</option>
+            <option value="paid" ${inv.status === 'paid' ? 'selected' : ''}>paid</option>
+          </select>
+        </td>
+        <td class="py-1 text-right">${inv.total.toFixed(2)}</td>
+        <td class="py-1 text-center">
+          <a href="/invoices/${inv.id}/pdf" target="_blank"
+             class="text-xs text-blue-600 hover:underline">PDF</a>
+        </td>
+        <td class="py-1 text-center space-x-1">
+          <button data-id="${inv.id}" class="save-inv-btn text-xs text-green-600 hover:underline">Save</button>
+          <button data-id="${inv.id}" class="edit-items-btn text-xs text-blue-600 hover:underline">Edit Items</button>
+          <button data-id="${inv.id}" class="delete-inv-btn text-xs text-red-600 hover:underline">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+
+      const statusSelect = document.getElementById(statusSelectId);
+
+      // Save status handler
+      tr.querySelector('.save-inv-btn').addEventListener('click', async () => {
+        const newStatus = statusSelect.value;
+        try {
+          const res = await fetch(`/invoices/${inv.id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ status: newStatus })
+          });
+          if (!res.ok) {
+            console.error('Failed to update invoice status');
+          } else {
+            loadInvoices();
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      });
+
+      // Edit items handler
+      tr.querySelector('.edit-items-btn').addEventListener('click', () => {
+        openEditInvoicePanel(inv.id);
+      });
+
+      // Delete invoice handler
+      tr.querySelector('.delete-inv-btn').addEventListener('click', async () => {
+        if (!confirm('Delete this invoice?')) return;
+        try {
+          const res = await fetch(`/invoices/${inv.id}`, { method: 'DELETE' });
+          if (res.ok) {
+            if (editingInvoiceId === inv.id) hideEditInvoicePanel();
+            loadInvoices();
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    });
+  }
+
+  // ---------- Edit invoice items panel ----------
+
+  async function openEditInvoicePanel(invoiceId) {
+    editingInvoiceId = invoiceId;
+    const panel = document.getElementById('editInvoicePanel');
+    const title = document.getElementById('editInvoiceTitle');
+    const idLabel = document.getElementById('editInvoiceIdLabel');
+    const container = document.getElementById('editInvoiceItemsContainer');
+    const errorEl = document.getElementById('editInvoiceError');
+
+    panel.style.display = 'block';
+    errorEl.classList.add('hidden');
+    container.innerHTML = '';
+    idLabel.textContent = `#${invoiceId}`;
+    title.textContent = `Edit Items - Invoice #${invoiceId}`;
+
+    try {
+      const res = await fetch(`/invoices/${invoiceId}`);
+      if (!res.ok) {
+        errorEl.textContent = 'Failed to load invoice details';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      const invoice = await res.json();
+      const lines = invoice.items || [];
+
+      if (!itemsCache.length) {
+        // in case items weren't loaded yet
+        await loadItems();
+      }
+
+      if (lines.length === 0) {
+        // no items yet -> one empty row
+        createLineRow('editInvoiceItemsContainer');
+      } else {
+        lines.forEach(li => {
+          createLineRow('editInvoiceItemsContainer', {
+            item_id: li.item_id,
+            quantity: li.quantity
+          });
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      errorEl.textContent = 'Network error';
+      errorEl.classList.remove('hidden');
+    }
+  }
+
+  function hideEditInvoicePanel() {
+    editingInvoiceId = null;
+    document.getElementById('editInvoicePanel').style.display = 'none';
+    document.getElementById('editInvoiceItemsContainer').innerHTML = '';
+  }
+
+  // ---------- DOMContentLoaded ----------
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    await Promise.all([loadCustomers(), loadItems()]);
+
+    // init one line row for create form
+    createLineRow('invoiceItemsContainer');
+
+    loadInvoices();
+
+    // add line in create form
+    document.getElementById('addLineBtn').addEventListener('click', () => {
+      if (!itemsCache.length) return;
+      createLineRow('invoiceItemsContainer');
+    });
+
+    // handle create invoice
+    document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const customerId = document.getElementById('invoiceCustomer').value;
+      const status = document.getElementById('invoiceStatus').value;
+      const errorEl = document.getElementById('invoiceError');
+      errorEl.classList.add('hidden');
+
+      const lines = [];
+      document.querySelectorAll('#invoiceItemsContainer > div').forEach(div => {
+        const [sel, qtyInput] = div.querySelectorAll('select, input');
+        const itemId = parseInt(sel.value);
+        const qty = parseInt(qtyInput.value) || 1;
+        if (itemId) {
+          lines.push({ item_id: itemId, quantity: qty });
+        }
+      });
+
+      if (!lines.length) {
+        errorEl.textContent = 'Add at least one item';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const payload = {
+        customer_id: parseInt(customerId),
+        status: status,
+        items: lines
+      };
+
+      try {
+        const res = await fetch('/invoices', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Failed to create invoice';
+          errorEl.classList.remove('hidden');
+          return;
+        }
+
+        document.getElementById('invoiceItemsContainer').innerHTML = '';
+        createLineRow('invoiceItemsContainer');
+        await loadInvoices();
+      } catch (err) {
+        console.error(err);
+        errorEl.textContent = 'Network error';
+        errorEl.classList.remove('hidden');
+      }
+    });
+
+    // handle "Add item" in EDIT panel
+    document.getElementById('editAddLineBtn').addEventListener('click', () => {
+      if (!itemsCache.length) return;
+      createLineRow('editInvoiceItemsContainer');
+    });
+
+    // handle save edit invoice items
+    document.getElementById('editInvoiceForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById('editInvoiceError');
+      errorEl.classList.add('hidden');
+
+      if (!editingInvoiceId) {
+        errorEl.textContent = 'No invoice selected';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const lines = [];
+      document.querySelectorAll('#editInvoiceItemsContainer > div').forEach(div => {
+        const [sel, qtyInput] = div.querySelectorAll('select, input');
+        const itemId = parseInt(sel.value);
+        const qty = parseInt(qtyInput.value) || 1;
+        if (itemId) {
+          lines.push({ item_id: itemId, quantity: qty });
+        }
+      });
+
+      if (!lines.length) {
+        errorEl.textContent = 'Add at least one item';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const payload = { items: lines }; // backend will replace all items for this invoice
+
+      try {
+        const res = await fetch(`/invoices/${editingInvoiceId}`, {
+          method: 'PATCH',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Failed to update invoice items';
+          errorEl.classList.remove('hidden');
+          return;
+        }
+
+        hideEditInvoicePanel();
+        await loadInvoices();
+      } catch (err) {
+        console.error(err);
+        errorEl.textContent = 'Network error';
+        errorEl.classList.remove('hidden');
+      }
+    });
+
+    // handle cancel edit / close panel
+    document.getElementById('cancelEditInvoiceBtn').addEventListener('click', () => {
+      hideEditInvoicePanel();
+    });
+  });
+</script>
+{% endblock %}

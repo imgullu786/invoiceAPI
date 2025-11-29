@@ -60,3 +60,142 @@
   </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  let customersCache = [];
+  let editingCustomerId = null;
+
+  function setCustomerFormMode(mode, customer = null) {
+    const title = document.getElementById('customerFormTitle');
+    const submitLabel = document.getElementById('customerSubmitLabel');
+    const cancelBtn = document.getElementById('customerCancelEdit');
+    const idInput = document.getElementById('customerId');
+    const nameInput = document.getElementById('custName');
+    const emailInput = document.getElementById('custEmail');
+    const phoneInput = document.getElementById('custPhone');
+    const addrInput = document.getElementById('custAddress');
+
+    if (mode === 'edit' && customer) {
+      editingCustomerId = customer.id;
+      idInput.value = customer.id;
+      nameInput.value = customer.name || '';
+      emailInput.value = customer.email || '';
+      phoneInput.value = customer.phone || '';
+      addrInput.value = customer.address || '';
+      title.textContent = 'Edit Customer';
+      submitLabel.textContent = 'Update';
+      cancelBtn.classList.remove('hidden');
+    } else {
+      editingCustomerId = null;
+      idInput.value = '';
+      nameInput.value = '';
+      emailInput.value = '';
+      phoneInput.value = '';
+      addrInput.value = '';
+      title.textContent = 'Add Customer';
+      submitLabel.textContent = 'Save';
+      cancelBtn.classList.add('hidden');
+    }
+  }
+
+  async function fetchCustomers() {
+    try {
+      const res = await fetch('/customers');
+      if (!res.ok) return;
+      const data = await res.json();
+      customersCache = data;
+      const tbody = document.getElementById('customersTableBody');
+      tbody.innerHTML = '';
+      data.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b';
+        tr.innerHTML = `
+          <td class="py-1">${c.name}</td>
+          <td class="py-1">${c.email || '-'}</td>
+          <td class="py-1">${c.phone || '-'}</td>
+          <td class="py-1 text-center space-x-2">
+            <button data-id="${c.id}" class="edit-btn text-xs text-blue-600 hover:underline">Edit</button>
+            <button data-id="${c.id}" class="delete-btn text-xs text-red-600 hover:underline">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Attach edit/delete handlers
+      tbody.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.getAttribute('data-id'));
+          const customer = customersCache.find(c => c.id === id);
+          if (customer) setCustomerFormMode('edit', customer);
+        });
+      });
+
+      tbody.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = parseInt(btn.getAttribute('data-id'));
+          if (!confirm('Delete this customer?')) return;
+          try {
+            const res = await fetch(`/customers/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+              if (editingCustomerId === id) setCustomerFormMode('create');
+              fetchCustomers();
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        });
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  document.getElementById('customerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('customerError');
+    errorEl.classList.add('hidden');
+
+    const payload = {
+      name: document.getElementById('custName').value.trim(),
+      email: document.getElementById('custEmail').value.trim() || null,
+      phone: document.getElementById('custPhone').value.trim() || null,
+      address: document.getElementById('custAddress').value.trim() || null,
+    };
+
+    const method = editingCustomerId ? 'PATCH' : 'POST';
+    const url = editingCustomerId ? `/customers/${editingCustomerId}` : '/customers';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        errorEl.textContent = data.error || 'Operation failed';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      setCustomerFormMode('create');
+      fetchCustomers();
+    } catch (err) {
+      console.error(err);
+      errorEl.textContent = 'Network error';
+      errorEl.classList.remove('hidden');
+    }
+  });
+
+  document.getElementById('customerCancelEdit').addEventListener('click', () => {
+    setCustomerFormMode('create');
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setCustomerFormMode('create');
+    fetchCustomers();
+  });
+</script>
+{% endblock %}

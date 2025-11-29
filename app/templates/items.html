@@ -50,3 +50,132 @@
   </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  let itemsCache = [];
+  let editingItemId = null;
+
+  function setItemFormMode(mode, item = null) {
+    const title = document.getElementById('itemFormTitle');
+    const submitLabel = document.getElementById('itemSubmitLabel');
+    const cancelBtn = document.getElementById('itemCancelEdit');
+    const idInput = document.getElementById('itemId');
+    const nameInput = document.getElementById('itemName');
+    const priceInput = document.getElementById('itemPrice');
+
+    if (mode === 'edit' && item) {
+      editingItemId = item.id;
+      idInput.value = item.id;
+      nameInput.value = item.name || '';
+      priceInput.value = item.unit_price;
+      title.textContent = 'Edit Item';
+      submitLabel.textContent = 'Update';
+      cancelBtn.classList.remove('hidden');
+    } else {
+      editingItemId = null;
+      idInput.value = '';
+      nameInput.value = '';
+      priceInput.value = '';
+      title.textContent = 'Add Item';
+      submitLabel.textContent = 'Save';
+      cancelBtn.classList.add('hidden');
+    }
+  }
+
+  async function fetchItems() {
+    try {
+      const res = await fetch('/items');
+      if (!res.ok) return;
+      const data = await res.json();
+      itemsCache = data;
+      const tbody = document.getElementById('itemsTableBody');
+      tbody.innerHTML = '';
+      data.forEach(it => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b';
+        tr.innerHTML = `
+          <td class="py-1">${it.name}</td>
+          <td class="py-1 text-right">${it.unit_price.toFixed(2)}</td>
+          <td class="py-1 text-center space-x-2">
+            <button data-id="${it.id}" class="edit-btn text-xs text-blue-600 hover:underline">Edit</button>
+            <button data-id="${it.id}" class="delete-btn text-xs text-red-600 hover:underline">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.getAttribute('data-id'));
+          const item = itemsCache.find(i => i.id === id);
+          if (item) setItemFormMode('edit', item);
+        });
+      });
+
+      tbody.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = parseInt(btn.getAttribute('data-id'));
+          if (!confirm('Delete this item?')) return;
+          try {
+            const res = await fetch(`/items/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+              if (editingItemId === id) setItemFormMode('create');
+              fetchItems();
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        });
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  document.getElementById('itemForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('itemError');
+    errorEl.classList.add('hidden');
+
+    const payload = {
+      name: document.getElementById('itemName').value.trim(),
+      unit_price: parseFloat(document.getElementById('itemPrice').value)
+    };
+
+    const method = editingItemId ? 'PATCH' : 'POST';
+    const url = editingItemId ? `/items/${editingItemId}` : '/items';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        errorEl.textContent = data.error || 'Operation failed';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      setItemFormMode('create');
+      fetchItems();
+    } catch (err) {
+      console.error(err);
+      errorEl.textContent = 'Network error';
+      errorEl.classList.remove('hidden');
+    }
+  });
+
+  document.getElementById('itemCancelEdit').addEventListener('click', () => {
+    setItemFormMode('create');
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setItemFormMode('create');
+    fetchItems();
+  });
+</script>
+{% endblock %}
