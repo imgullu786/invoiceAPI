@@ -30,5 +30,26 @@
   <main class="max-w-5xl mx-auto px-4">
     {% block content %}{% endblock %}
   </main>
+
+  <script>
+    // logout using existing /auth/logout API
+    document.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          try {
+            const res = await fetch('/auth/logout', { method: 'POST' });
+            if (res.ok) {
+              window.location.href = '/login';
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        });
+      }
+    });
+  </script>
+
+  {% block scripts %}{% endblock %}
 </body>
 </html>

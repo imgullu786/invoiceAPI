@@ -24,3 +24,42 @@
   </form>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const errorEl = document.getElementById('registerError');
+    errorEl.classList.add('hidden');
+
+    const payload = {
+      username: form.username.value.trim(),
+      password: form.password.value.trim()
+    };
+
+    try {
+      const res = await fetch('/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorEl.textContent = data.error || 'Registration failed';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      // auto-login after register
+      window.location.href = '/login';
+    } catch (err) {
+      console.error(err);
+      errorEl.textContent = 'Network error';
+      errorEl.classList.remove('hidden');
+    }
+  });
+</script>
+{% endblock %}
